@@ -17,67 +17,85 @@
         <h1 class="pageTitle">Project: Flashcard Study Game</h1>
     </header>
 
-    <section id="gameContainer">
-        <div id="deckNameContainer">
-            <span id="deckName">Deck Name</span>
-        </div>
-        <div id="levelContainer">
-            <div class="level">
-                <span id="levelZero"> - </span>
-                <label for="levelZero">Start</label>
+    <section id="mainContainer">
+        <section id="gameContainer">
+            <div id="deckNameContainer">
+                <span id="deckName">Deck Name</span>
             </div>
-            <div class="level">
-                <span id="levelOne"> - </span>
-                <label for="levelOne">Level 1</label>
+            <div id="levelContainer">
+                <div class="level">
+                    <span id="levelZero"> - </span>
+                    <label for="levelZero">Start</label>
+                </div>
+                <div class="level">
+                    <span id="levelOne"> - </span>
+                    <label for="levelOne">Level 1</label>
+                </div>
+                <div class="level">
+                    <span id="levelTwo"> - </span>
+                    <label for="levelTwo">Level 2</label>
+                </div>
+                <div class="level">
+                    <span id="levelThree"> - </span>
+                    <label for="levelThree">Level 3</label>
+                </div>
+                <div class="level">
+                    <span id="levelFour"> - </span>
+                    <label for="levelFour">Level 4</label>
+                </div>
+                <div class="level">
+                    <span id="levelFive"> - </span>
+                    <label for="levelFive">Level 5</label>
+                </div>
+                <div class="level">
+                    <span id="levelSix"> - </span>
+                    <label for="levelSix">Level 6</label>
+                </div>
+                <div class="level">
+                    <span id="levelSeven"> - </span>
+                    <label for="levelSeven">Finish</label>
+                </div>
             </div>
-            <div class="level">
-                <span id="levelTwo"> - </span>
-                <label for="levelTwo">Level 2</label>
-            </div>
-            <div class="level">
-                <span id="levelThree"> - </span>
-                <label for="levelThree">Level 3</label>
-            </div>
-            <div class="level">
-                <span id="levelFour"> - </span>
-                <label for="levelFour">Level 4</label>
-            </div>
-            <div class="level">
-                <span id="levelFive"> - </span>
-                <label for="levelFive">Level 5</label>
-            </div>
-            <div class="level">
-                <span id="levelSix"> - </span>
-                <label for="levelSix">Level 6</label>
-            </div>
-            <div class="level">
-                <span id="levelSeven"> - </span>
-                <label for="levelSeven">Finish</label>
-            </div>
-        </div>
 
-        <div id="flashcardContainer">
-            <span id="flashcard">Flashcard</span>
-        </div>
+            <div id="flashcardContainer">
+                <span id="flashcardText">Flashcard</span>
+            </div>
 
-        <div id="buttonsContainer">
-            <button class="buttons" id="flipCard">Flip Card</button>
-            <button class="buttons" id="markCorrect">Mark Correct</button>
-            <button class="buttons" id="MarkIncorrect">Mark Incorrect</button>
-            <button class="buttons" id="nextCard">Next Card</button>
-        </div>
+            <div id="buttonsContainer">
+                <button class="buttons" id="flipCard">Flip Card</button>
+                <button class="buttons" id="markCorrect">Mark Correct</button>
+                <button class="buttons" id="MarkIncorrect">Mark Incorrect</button>
+                <button class="buttons" id="nextCard">Next Card</button>
+            </div>
 
-        <div id="instructionsContainer">
-            <span id="instructions">How to Play:</span>
-        </div>
+            <div id="instructionsContainer">
+                <h3>How to Play:</h3>
+                <span id="instructions">
+                    The goal of this game is to correctly answer the question or definition posed by each flashcard
+                    7 times without answering incorrectly.  The game will cycle through the entire deck of flashcards
+                    each round.  If you answer correctly, mark the flashcard correct, which will promote it to the next
+                    "level" of mastery.  If you answer incorrectly, mark the flashcard incorrect, which will demote the 
+                    card back to "Start."  When a card reaches "Finish," it is considered mastered and it will not be
+                    cycled through anymore.  Once all cards reach "Finish," the game is over and you have won!
+                </span>
+                <ol>
+                    <li>Select a deck from the menu</li>
+                    <li>Read the question on the card and try to think of the answer</li>
+                    <li>Press "Flip Card" to reveal the answer</li>
+                    <li>Press "Mark Correct" or "Mark Incorrect" depending on the accuracy of your answer</li>
+                    <li>Correct responses promote the flashcard to the next level, incorrect responses demote it to "Start"</li>
+                    <li>When all the cards reach "Finish," you have won the game!</li>
+                </ol>
+            </div>
+        </section>
 
+        <aside id="deckMenu">
+            <h3>Decks</h3>
+            <ul>
+                <li>Deck 1 - Author</li>
+                <li>Deck 2 - Author</li>
+            </ul>
+        </aside>
     </section>
 
-    <aside id="deckMenu">
-        <h3>Decks</h3>
-        <ul>
-            <li>Deck 1 - Author</li>
-            <li>Deck 2 - Author</li>
-        </ul>
-    </aside>
 </body>

@@ -15,10 +15,90 @@ header {
     top: 25%;
 }
 
+#mainContainer {
+    display: grid;
+    grid-template-columns: 85% 15%;
+}
+
 #gameContainer {
     position: relative;
     top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+#deckNameContainer {
+    background-color:rgb(137, 187, 204);
+    width: 400px;
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
+    margin: 10px;
+}
 
+#deckName {
+    font-size: 1.5em;
+    font-weight: bolder;
+}
+
+#levelContainer {
+    display: flex;
+}
+
+.level {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: rgb(137, 187, 204);
+    border: 1px solid black;
+    width: 75px;
+    margin: 5px;
+}
+
+#flashcardContainer {
+    width: 600px;
+    height: 250px;
+    margin: 10px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.buttons {
+    background-color: rgb(137, 187, 204);
+    border: 1px solid black;
+    border-radius: 3px;
+    width: 100px;
+    height: 25px;
+}
+
+#buttonsContainer {
+    width: 600px;
+    background-color: beige;
+    display: flex;
+    justify-content: space-around;
+}
+
+#deckMenu {
+    position: relative;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: beige;
+}
+
+#instructionsContainer {
+    margin-top: 20px;
+    width: 600px;
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(169, 169, 153);
+}
 
