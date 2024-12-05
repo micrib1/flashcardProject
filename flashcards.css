@@ -75,6 +75,10 @@ header {
     height: 25px;
 }
 
+.buttons:hover {
+    background-color: rgb(69, 166, 198)
+}
+
 #buttonsContainer {
     width: 600px;
     background-color: beige;
