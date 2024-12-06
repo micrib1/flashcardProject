@@ -106,3 +106,46 @@ header {
     background-color: rgb(169, 169, 153);
 }
 
+#formContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgb(137, 187, 204);
+    margin: 10px;
+    width: 60%;
+}
+
+label {
+    display: block;
+}
+
+input {
+    margin-bottom: 10px;
+}
+
+#addDeckForm {
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+.centeredContainer {
+    position: relative;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.formButtons {
+    background-color:azure;
+}
+
+.formButtons:hover {
+    background-color:rgb(71, 149, 149);
+}
+
+#noteContainer {
+    margin-top: 10px;
+}

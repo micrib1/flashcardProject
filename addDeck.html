@@ -18,11 +18,18 @@
         <h1 class="pageTitle">Project: Flashcard Study Game</h1>
     </header>
 
-    <section id="mainContainer">
-        <div id="formContainer">
-
-            
+    <section class="centeredContainer">
+        <section id="formContainer">
+            <form id="addDeckForm">
+                <label for="deckName">Deck Name: </label>
+                <input type="text" id="inputDeckName" name="inputDeckName">
+                <label for="authorName">Author: </label>
+                <input type="text" id="authorName" name="authorName">
+            </form>
+        </section>
+        <button class="buttons" id="createDeckButton">Create Deck</button>
+        <div id="noteContainer">
+            <span id="formNote">*Note: Deck name and author combination must be unique</span>
         </div>
-
     </section>
 </body>
