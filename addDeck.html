@@ -19,7 +19,7 @@
     </header>
 
     <section class="centeredContainer">
-        <section id="formContainer">
+        <section class="formContainer" id="addDeckFormContainer">
             <form id="addDeckForm">
                 <label for="deckName">Deck Name: </label>
                 <input type="text" id="inputDeckName" name="inputDeckName">
@@ -31,5 +31,14 @@
         <div id="noteContainer">
             <span id="formNote">*Note: Deck name and author combination must be unique</span>
         </div>
+        <section class="formContainer" id="addCardFormContainer">
+            <form id="addCardForm">
+                <h3 id="formName">Enter Flashcard Info:</h3>
+                <label for="question">Question: </label>
+                <textarea rows="3" cols="60" id="question" name="question"></textarea>
+                <label for="answer">Answer: </label>
+                <textarea rows="3" cols="60" id="answer" name="answer"></textarea>
+            </form>
+        </section>
     </section>
 </body>
