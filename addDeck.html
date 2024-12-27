@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="flashcards.css">
-    <script src="flashcards.js"></script>
+    <script type="module" src="flashcards.js"></script>
     <title>Flashcard Project Deck Creation</title>
 </head>
 
@@ -20,14 +20,14 @@
 
     <section class="centeredContainer">
         <section class="formContainer" id="addDeckFormContainer">
-            <form id="addDeckForm">
-                <label for="deckName">Deck Name: </label>
-                <input type="text" id="inputDeckName" name="inputDeckName">
-                <label for="authorName">Author: </label>
-                <input type="text" id="authorName" name="authorName">
+            <form action="addDeck.html" method="GET" id="addDeckForm">
+                <label for="deckNameInput">Deck Name: </label>
+                <input type="text" id="deckNameInput" name="name">
+                <label for="authorNameInput">Author: </label>
+                <input type="text" id="authorNameInput" name="author">
+                <button class="buttons" id="createDeckButton" type="submit" onclick="createDeck()">Create Deck</button>
             </form>
         </section>
-        <button class="buttons" id="createDeckButton">Create Deck</button>
         <div id="noteContainer">
             <span id="formNote">*Note: Deck name and author combination must be unique</span>
         </div>
@@ -38,6 +38,7 @@
                 <textarea rows="3" cols="60" id="question" name="question"></textarea>
                 <label for="answer">Answer: </label>
                 <textarea rows="3" cols="60" id="answer" name="answer"></textarea>
+                <button class="buttons" id="createFlashcardButton" type="submit" onclick="createFlashcard()">Create Flashcard</button>
             </form>
         </section>
     </section>

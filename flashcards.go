@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/gin-contrib/cors"
+
 	"errors"
 )
 
@@ -86,6 +88,12 @@ func createFlashcard(c *gin.Context) {
 
 func main() {
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://127.0.0.1:5500"},
+		AllowMethods:     []string{"PUT", "PATCH", "POST", "DELETE", "GET"},
+		AllowHeaders:     []string{"Content-type"},
+		AllowCredentials: true,
+	}))
 	router.GET("/decks", getDecks)
 	router.POST("/decks", createDeck)
 	router.GET("/flashcards", getFlashcards)
