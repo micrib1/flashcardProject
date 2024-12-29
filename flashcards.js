@@ -15,7 +15,6 @@ async function getDecks() {
 
 
 async function createDeck(name, author) {
-
     const data = {
         name, author,
     }
@@ -28,6 +27,11 @@ async function createDeck(name, author) {
         body: JSON.stringify(data)
     })
 
+    if(result.ok) {
+    const url = `http://127.0.0.1:5500/addDeck.html?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`
+    window.history.pushState({}, "", url)
+    }
+
     console.log(result)
 }
 
@@ -35,7 +39,6 @@ async function createDeck(name, author) {
 async function createFlashcard() {
     const question = document.getElementById("question").value;
     const answer = document.getElementById("answer").value;
-    console.log(question, answer)
 
     const name = await getQueryParam("name")
     const author = await getQueryParam("author")
@@ -44,7 +47,7 @@ async function createFlashcard() {
         question, answer,
     }
 
-    const fetchLocation = "http://localhost:8080/flashcards?name="+ name + "&author=" + author
+    const fetchLocation = "http://localhost:8080/flashcards?name="+ encodeURIComponent(name) + "&author=" + encodeURIComponent(author)
     const result = await fetch(fetchLocation, {
         method: "POST",
         headers: {
@@ -56,6 +59,20 @@ async function createFlashcard() {
     console.log(result)
 }
 
+async function getFormInputs() {
+    const addDeckForm = document.getElementById("addDeckForm")
+    const addFlashcardForm = document.getElementById("addFlashcardForm")
 
-document.addEventListener("submit", createDeck(await getQueryParam("name"), await getQueryParam("author")))
-createFlashcard()
+    addDeckForm.addEventListener("submit", async function(event) {
+        event.preventDefault()
+        const name = document.getElementById("deckNameInput").value
+        const author = document.getElementById("authorNameInput").value
+        await createDeck(name, author)
+    })
+    addFlashcardForm.addEventListener("submit", function(event) {
+        event.preventDefault()
+        createFlashcard()
+    })
+}
+
+getFormInputs()
