@@ -13,7 +13,6 @@ async function getDecks() {
     }
 }
 
-
 async function createDeck(name, author) {
     const data = {
         name, author,
@@ -30,11 +29,13 @@ async function createDeck(name, author) {
     if(result.ok) {
     const url = `http://127.0.0.1:5500/addDeck.html?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`
     window.history.pushState({}, "", url)
+    } else {
+        const errorMsg = await result.text()
+        console.error("Error creating deck:", errorMsg)
     }
 
     console.log(result)
 }
-
 
 async function createFlashcard() {
     const question = document.getElementById("question").value;
@@ -42,12 +43,19 @@ async function createFlashcard() {
 
     const name = await getQueryParam("name")
     const author = await getQueryParam("author")
+
+    const deckID = await getDeckID(name, author);
+
+    if (!deckID) {
+        console.error("Deck ID not found")
+        return;
+    }
     
     const data = {
-        question, answer,
+        question, answer, deck_id: deckID,
     }
 
-    const fetchLocation = "http://localhost:8080/flashcards?name="+ encodeURIComponent(name) + "&author=" + encodeURIComponent(author)
+    const fetchLocation = `http://localhost:8080/flashcards?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`
     const result = await fetch(fetchLocation, {
         method: "POST",
         headers: {
@@ -59,19 +67,39 @@ async function createFlashcard() {
     console.log(result)
 }
 
+async function getDeckID(name, author) {
+    const response = await fetch(`http://localhost:8080/decks?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`)
+    const decks = await response.json()
+    if (decks && decks.length > 0) {
+        return decks[0].id;
+    } else {
+        console.error("Deck not found")
+        return null
+    }
+}
+
 async function getFormInputs() {
     const addDeckForm = document.getElementById("addDeckForm")
     const addFlashcardForm = document.getElementById("addFlashcardForm")
+    const insertDeckButton = document.getElementById("insertDeckButton")
 
     addDeckForm.addEventListener("submit", async function(event) {
         event.preventDefault()
         const name = document.getElementById("deckNameInput").value
         const author = document.getElementById("authorNameInput").value
         await createDeck(name, author)
+
+        //hide deck form, show flashcard form
+        addDeckForm.parentElement.classList.add("hidden")
+        addFlashcardForm.parentElement.classList.remove("hidden")
     })
     addFlashcardForm.addEventListener("submit", function(event) {
         event.preventDefault()
         createFlashcard()
+    })
+    insertDeckButton.addEventListener("click", function(event) {
+        event.preventDefault()
+        console.log("TEST - Button works")
     })
 }
 

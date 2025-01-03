@@ -7,19 +7,32 @@ import (
 
 	"github.com/gin-contrib/cors"
 
-	"errors"
+	"github.com/joho/godotenv"
+
+	"database/sql"
+
+	"fmt"
+
+	"os"
+
+	"log"
+
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 type Deck struct {
+	ID         int64       `json:"id"`
 	Name       string      `json:"name"`
 	Author     string      `json:"author"`
 	Flashcards []Flashcard `json:"flashcards"`
 }
 
 type Flashcard struct {
+	ID       int64  `json:"id"`
 	Question string `json:"question"`
 	Answer   string `json:"answer"`
 	Counter  int    `json:"counter"`
+	DeckID   int64  `json:"deck_id"`
 }
 
 var decks = []Deck{}
@@ -32,20 +45,65 @@ func createDeck(c *gin.Context) {
 	var newDeck Deck
 
 	if err := c.BindJSON(&newDeck); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
 		return
 	}
 
-	decks = append(decks, newDeck)
-	c.IndentedJSON(http.StatusCreated, newDeck)
+	db, err := sql.Open("libsql", os.Getenv("TURSO_DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
+		return
+	} else {
+		log.Println("Successfully opened connection to database", db)
+	}
+	defer db.Close()
+
+	deckID, err := insertDeck(db, newDeck)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save deck"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Deck created", "deck_id": deckID})
 }
 
-func getDeckByName(name string, author string) (*Deck, error) {
-	for i, d := range decks {
-		if d.Name == name && d.Author == author {
-			return &decks[i], nil
-		}
+func insertDeck(db *sql.DB, deck Deck) (int64, error) {
+
+	stmt, err := db.Prepare("INSERT INTO decks (name, author) VALUES (?, ?)")
+	if err != nil {
+		//log.Println("Error preparing statement", "statement: ", stmt, "deck: ", deck, "error: ", err)
+		return 0, err
 	}
-	return nil, errors.New("Deck not found")
+	defer stmt.Close()
+
+	result, err := stmt.Exec(deck.Name, deck.Author)
+	if err != nil {
+		log.Println("Error executing statement:", deck.Name, deck.Author, " Error: ", err)
+		return 0, err
+	}
+
+	deckID, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return deckID, nil
+}
+
+func getDeckByName(db *sql.DB, name string, author string) (*Deck, error) {
+	query := "SELECT id, name, author FROM decks WHERE name = ? AND author = ?"
+	row := db.QueryRow(query, name, author)
+
+	var deck Deck
+	if err := row.Scan(&deck.ID, &deck.Name, &deck.Author); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("Deck not found")
+		}
+		return nil, err
+	}
+
+	return &deck, nil
 }
 
 var flashcards = []Flashcard{}
@@ -58,6 +116,7 @@ func createFlashcard(c *gin.Context) {
 	var newFlashcard Flashcard
 
 	if err := c.BindJSON(&newFlashcard); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
 		return
 	}
 
@@ -75,18 +134,87 @@ func createFlashcard(c *gin.Context) {
 		return
 	}
 
-	deck, err := getDeckByName(name, author)
+	db, err := sql.Open("libsql", os.Getenv("TURSO_DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
+		return
+	}
+	defer db.Close()
+
+	deck, err := getDeckByName(db, name, author)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Deck not found."})
 		return
 	}
 
-	deck.Flashcards = append(deck.Flashcards, newFlashcard)
-	c.IndentedJSON(http.StatusCreated, newFlashcard)
+	err = insertFlashcard(db, deck.ID, newFlashcard)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save flashcard"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Flashcard created"})
+}
+
+func insertFlashcard(db *sql.DB, deckID int64, flashcard Flashcard) error {
+	stmt, err := db.Prepare("INSERT INTO flashcards (question, answer, counter, deck_id) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(flashcard.Question, flashcard.Answer, flashcard.Counter, deckID)
+	return err
+}
+
+func runDB() (err error) {
+	dbUrl := os.Getenv("TURSO_DATABASE_URL")
+	if dbUrl == "" {
+		return fmt.Errorf("TURSO_DATABASE_URL environment variable not set")
+	}
+
+	authToken := os.Getenv("TURSO_AUTH_TOKEN")
+	if authToken != "" {
+		dbUrl += "?authToken=" + authToken
+	}
+
+	db, err := sql.Open("libsql", dbUrl)
+	if err != nil {
+		return fmt.Errorf("error opening cloud db %w", err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("Database connection failed: %v", err)
+	} else {
+		log.Println("Database pinged successfully")
+	}
+
+	return nil
 }
 
 func main() {
+	log.Println("starting program...")
+
+	err := godotenv.Load(".env")
+	log.Println("loading environment...")
+	if err != nil {
+		log.Println("Error loading .env file")
+	} else {
+		log.Println(".env file loaded")
+	}
+
+	log.Println("initializing database...")
+	if err := runDB(); err != nil {
+		fmt.Fprintf(os.Stderr, "error running: %v\n", err)
+		os.Exit(1)
+	} else {
+		fmt.Fprintf(os.Stdout, "database connected successfully")
+		log.Println("database running...")
+	}
+
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://127.0.0.1:5500"},
@@ -99,5 +227,4 @@ func main() {
 	router.GET("/flashcards", getFlashcards)
 	router.POST("/flashcards", createFlashcard)
 	router.Run("localhost:8080")
-
 }

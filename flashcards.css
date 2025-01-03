@@ -1,11 +1,34 @@
+.mainBkg {
+    background-color: rgb(137, 187, 204)
+}
+
+.flex {
+    display: flex;
+}
+
+.alignCenter {
+    align-items: center;
+}
+
+.justifyCenter {
+    justify-content: center;
+}
+
+.flexColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    background-color:bisque;
+}
+
 header {
-    background-color:rgb(137, 187, 204);
     position: fixed;
     margin-top: -1%;
-    width: 100%;
+    margin-left: -1%;
+    width: 101%;
     height: 80px;
-    display: flex;
-    justify-content: center;
     z-index: 1;
 }
 
@@ -23,16 +46,10 @@ header {
 #gameContainer {
     position: relative;
     top: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 #deckNameContainer {
-    background-color:rgb(137, 187, 204);
     width: 400px;
-    display: flex;
-    justify-content: center;
     border: 1px solid black;
     margin: 10px;
 }
@@ -40,10 +57,6 @@ header {
 #deckName {
     font-size: 1.5em;
     font-weight: bolder;
-}
-
-#levelContainer {
-    display: flex;
 }
 
 .level {
@@ -68,7 +81,7 @@ header {
 }
 
 .buttons {
-    background-color: rgb(137, 187, 204);
+    background-color: rgb(69, 166, 198);
     border: 1px solid black;
     border-radius: 3px;
     width: 100px;
@@ -76,7 +89,7 @@ header {
 }
 
 .buttons:hover {
-    background-color: rgb(69, 166, 198)
+    background-color: rgb(137, 187, 204)
 }
 
 #buttonsContainer {
@@ -144,4 +157,8 @@ form {
 
 textarea {
     margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
 }
