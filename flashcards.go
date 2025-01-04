@@ -49,7 +49,18 @@ func createDeck(c *gin.Context) {
 		return
 	}
 
-	db, err := sql.Open("libsql", os.Getenv("TURSO_DATABASE_URL"))
+	dbUrl := os.Getenv("TURSO_DATABASE_URL")
+	if dbUrl == "" {
+		log.Println("TURSO_DATABASE_URL environment variable not set")
+		return
+	}
+
+	authToken := os.Getenv("TURSO_AUTH_TOKEN")
+	if authToken != "" {
+		dbUrl += "?authToken=" + authToken
+	}
+
+	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
 		log.Fatal(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
