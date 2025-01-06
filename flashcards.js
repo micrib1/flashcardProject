@@ -43,16 +43,9 @@ async function createFlashcard() {
 
     const name = await getQueryParam("name")
     const author = await getQueryParam("author")
-
-    const deckID = await getDeckID(name, author);
-
-    if (!deckID) {
-        console.error("Deck ID not found")
-        return;
-    }
     
     const data = {
-        question, answer, deck_id: deckID,
+        question, answer,
     }
 
     const fetchLocation = `http://localhost:8080/flashcards?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`
@@ -66,7 +59,7 @@ async function createFlashcard() {
 
     console.log(result)
 }
-
+/*
 async function getDeckID(name, author) {
     const response = await fetch(`http://localhost:8080/decks?name=${encodeURIComponent(name)}&author=${encodeURIComponent(author)}`)
     const decks = await response.json()
@@ -77,6 +70,7 @@ async function getDeckID(name, author) {
         return null
     }
 }
+*/
 
 async function getFormInputs() {
     const addDeckForm = document.getElementById("addDeckForm")

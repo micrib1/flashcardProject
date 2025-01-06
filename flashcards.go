@@ -35,6 +35,7 @@ type Flashcard struct {
 	DeckID   int64  `json:"deck_id"`
 }
 
+var db *sql.DB
 var decks = []Deck{}
 
 func getDecks(c *gin.Context) {
@@ -49,28 +50,7 @@ func createDeck(c *gin.Context) {
 		return
 	}
 
-	dbUrl := os.Getenv("TURSO_DATABASE_URL")
-	if dbUrl == "" {
-		log.Println("TURSO_DATABASE_URL environment variable not set")
-		return
-	}
-
-	authToken := os.Getenv("TURSO_AUTH_TOKEN")
-	if authToken != "" {
-		dbUrl += "?authToken=" + authToken
-	}
-
-	db, err := sql.Open("libsql", dbUrl)
-	if err != nil {
-		log.Fatal(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
-		return
-	} else {
-		log.Println("Successfully opened connection to database", db)
-	}
-	defer db.Close()
-
-	deckID, err := insertDeck(db, newDeck)
+	deckID, err := insertDeck(newDeck)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save deck"})
 		return
@@ -79,11 +59,11 @@ func createDeck(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Deck created", "deck_id": deckID})
 }
 
-func insertDeck(db *sql.DB, deck Deck) (int64, error) {
+func insertDeck(deck Deck) (int64, error) {
 
 	stmt, err := db.Prepare("INSERT INTO decks (name, author) VALUES (?, ?)")
 	if err != nil {
-		//log.Println("Error preparing statement", "statement: ", stmt, "deck: ", deck, "error: ", err)
+		log.Println("Error preparing statement", "statement: ", stmt, "deck: ", deck, "error: ", err)
 		return 0, err
 	}
 	defer stmt.Close()
@@ -102,7 +82,7 @@ func insertDeck(db *sql.DB, deck Deck) (int64, error) {
 	return deckID, nil
 }
 
-func getDeckByName(db *sql.DB, name string, author string) (*Deck, error) {
+func getDeckByName(name string, author string) (*Deck, error) {
 	query := "SELECT id, name, author FROM decks WHERE name = ? AND author = ?"
 	row := db.QueryRow(query, name, author)
 
@@ -145,22 +125,14 @@ func createFlashcard(c *gin.Context) {
 		return
 	}
 
-	db, err := sql.Open("libsql", os.Getenv("TURSO_DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to connect to database"})
-		return
-	}
-	defer db.Close()
-
-	deck, err := getDeckByName(db, name, author)
+	deck, err := getDeckByName(name, author)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Deck not found."})
 		return
 	}
 
-	err = insertFlashcard(db, deck.ID, newFlashcard)
+	err = insertFlashcard(deck.ID, newFlashcard)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save flashcard"})
 		return
@@ -169,7 +141,7 @@ func createFlashcard(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Flashcard created"})
 }
 
-func insertFlashcard(db *sql.DB, deckID int64, flashcard Flashcard) error {
+func insertFlashcard(deckID int64, flashcard Flashcard) error {
 	stmt, err := db.Prepare("INSERT INTO flashcards (question, answer, counter, deck_id) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		return err
@@ -179,10 +151,10 @@ func insertFlashcard(db *sql.DB, deckID int64, flashcard Flashcard) error {
 	return err
 }
 
-func runDB() (err error) {
+func runDB() (db *sql.DB, err error) {
 	dbUrl := os.Getenv("TURSO_DATABASE_URL")
 	if dbUrl == "" {
-		return fmt.Errorf("TURSO_DATABASE_URL environment variable not set")
+		return nil, fmt.Errorf("TURSO_DATABASE_URL environment variable not set")
 	}
 
 	authToken := os.Getenv("TURSO_AUTH_TOKEN")
@@ -190,11 +162,10 @@ func runDB() (err error) {
 		dbUrl += "?authToken=" + authToken
 	}
 
-	db, err := sql.Open("libsql", dbUrl)
+	db, err = sql.Open("libsql", dbUrl)
 	if err != nil {
-		return fmt.Errorf("error opening cloud db %w", err)
+		return nil, fmt.Errorf("error opening cloud db %w", err)
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
@@ -203,13 +174,14 @@ func runDB() (err error) {
 		log.Println("Database pinged successfully")
 	}
 
-	return nil
+	return db, nil
 }
 
 func main() {
 	log.Println("starting program...")
 
-	err := godotenv.Load(".env")
+	var err error
+	err = godotenv.Load(".env")
 	log.Println("loading environment...")
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -218,13 +190,14 @@ func main() {
 	}
 
 	log.Println("initializing database...")
-	if err := runDB(); err != nil {
+	if db, err = runDB(); err != nil {
 		fmt.Fprintf(os.Stderr, "error running: %v\n", err)
 		os.Exit(1)
 	} else {
 		fmt.Fprintf(os.Stdout, "database connected successfully")
 		log.Println("database running...")
 	}
+	defer db.Close()
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
