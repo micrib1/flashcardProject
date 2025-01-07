@@ -17,6 +17,8 @@ import (
 
 	"log"
 
+	"strconv"
+
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
@@ -37,9 +39,36 @@ type Flashcard struct {
 
 var db *sql.DB
 var decks = []Deck{}
+var flashcards = []Flashcard{}
 
 func getDecks(c *gin.Context) {
+	rows, err := db.Query("SELECT * FROM decks")
+	if err != nil {
+		log.Println("Error querying database for decks: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch decks"})
+		return
+	}
+	defer rows.Close()
+
+	decks = []Deck{}
+	for rows.Next() {
+		var deck Deck
+		if err := rows.Scan(&deck.ID, &deck.Name, &deck.Author); err != nil {
+			log.Println("Error scanning row into deck struct: ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to parse deck"})
+			return
+		}
+		decks = append(decks, deck)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating rows: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve decks"})
+		return
+	}
+
 	c.IndentedJSON(http.StatusOK, decks)
+	log.Println("decks: ", decks)
 }
 
 func createDeck(c *gin.Context) {
@@ -97,10 +126,51 @@ func getDeckByName(name string, author string) (*Deck, error) {
 	return &deck, nil
 }
 
-var flashcards = []Flashcard{}
-
 func getFlashcards(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, flashcards)
+	//DeckID sent as string via JSON - accept as string and convert to int64
+	var data struct {
+		DeckID string `json:"deck_id"`
+	}
+
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
+	}
+	log.Println("deckID as string: ", data.DeckID)
+
+	deckID, err := strconv.ParseInt(data.DeckID, 10, 64)
+	if err != nil {
+		log.Println("Error converting deckID to int64: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid deck_id format"})
+		return
+	}
+
+	//set flashcards to empty slice and populate with deck flashcards
+	flashcards = []Flashcard{}
+	rows, err := db.Query("SELECT id, question, answer, counter, deck_id FROM flashcards WHERE deck_id = ?", deckID)
+	if err != nil {
+		log.Println("Error querying database for flashcards: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch flashcards"})
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var flashcard Flashcard
+		if err := rows.Scan(&flashcard.ID, &flashcard.Question, &flashcard.Answer, &flashcard.Counter, &flashcard.DeckID); err != nil {
+			log.Println("Error scanning row into flashcard struct: ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to parse flashcard data"})
+			return
+		}
+		flashcards = append(flashcards, flashcard)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating rows: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve flashcards"})
+		return
+	}
+	c.JSON(http.StatusOK, flashcards)
+	log.Println(flashcards)
 }
 
 func createFlashcard(c *gin.Context) {
@@ -208,7 +278,7 @@ func main() {
 	}))
 	router.GET("/decks", getDecks)
 	router.POST("/decks", createDeck)
-	router.GET("/flashcards", getFlashcards)
+	router.POST("/get-flashcards", getFlashcards)
 	router.POST("/flashcards", createFlashcard)
 	router.Run("localhost:8080")
 }

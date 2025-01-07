@@ -162,3 +162,13 @@ textarea {
 .hidden {
     display: none;
 }
+
+#deckList div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+#deckList input[type="radio"] {
+    margin-right: 5px;
+}
