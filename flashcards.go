@@ -33,7 +33,7 @@ type Flashcard struct {
 	ID       int64  `json:"id"`
 	Question string `json:"question"`
 	Answer   string `json:"answer"`
-	Counter  int    `json:"counter"`
+	Counter  int64  `json:"counter"`
 	DeckID   int64  `json:"deck_id"`
 }
 

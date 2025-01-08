@@ -1,7 +1,9 @@
 import fetch from "https://cdn.skypack.dev/node-fetch"
 
 let flashcards = []
+let currentFlashcardIndex = 0
 
+//Deck and flashcard creation
 async function getQueryParam(param) {
     const urlParam = new URLSearchParams(window.location.search)
     console.log(urlParam.get(param))
@@ -79,7 +81,9 @@ async function createFlashcard() {
     console.log(result)
 }
 
+//flashcard game
 async function getFlashcards() {
+    flashcards = []
     const deckSelection = document.querySelector('input[name="deck"]:checked')
     if (!deckSelection) {
         alert("No deck selected, please select a deck.")
@@ -112,16 +116,193 @@ async function getFlashcards() {
     })
 }
 
+async function shuffleFlashcards(array) {
+    try {
+        console.log("starting shuffle")
+        console.log("initial flashcards array: ", JSON.stringify(array))
+        for (let i = array.length -1; i > 0; i--) {
+            console.log("i: ", i)
+            const j = Math.floor(Math.random() * (i + 1))
+            console.log("j: ", j)
+            [array[i], array[j]] = [array[j], array[i]]
+            console.log("shuffling complete: ", array)
+        }
+        return array
+    } catch(error) {
+        console.error("Error during shuffle: ", error);
+        return array
+    }
+}
+
+async function showFlashcard() {
+    if (flashcards.length === 0) {
+        alert("No flashcards available")
+    return
+    }
+
+    const flashcard = flashcards[currentFlashcardIndex]
+    const questionElement = document.getElementById("flashcardQuestion")
+    const answerElement = document.getElementById("flashcardAnswer")
+
+    questionElement.textContent = "Question: " + flashcard.question
+    answerElement.textContent = "Answer: " + flashcard.answer
+
+    if (questionElement.classList.contains("hidden")) {
+        flipFlashcard()
+    }
+}
+
+async function flipFlashcard() {
+    const questionElement = document.getElementById("flashcardQuestion")
+    const answerElement = document.getElementById("flashcardAnswer")
+
+    if (questionElement.classList.contains("hidden")) {
+        questionElement.classList.remove("hidden")
+        answerElement.classList.add("hidden")
+    } else {
+        questionElement.classList.add("hidden")
+        answerElement.classList.remove("hidden")
+    }
+}
+
+async function nextFlashcard() {
+    if (flashcards.length === 0) {
+        alert("No flashcards available")
+        return
+    }
+    
+    const lastFlashcardIndex = flashcards.length - 1
+    if (currentFlashcardIndex != lastFlashcardIndex) {
+        currentFlashcardIndex += 1
+        showFlashcard()
+    } else {
+        //flashcards = await shuffleFlashcards(flashcards)
+        currentFlashcardIndex = 0
+        showFlashcard()
+    }
+
+    await updateScores()
+}
+
+async function markFlashcardCorrect() {
+    const flashcard = flashcards[currentFlashcardIndex]
+    flashcard.counter += 1
+    nextFlashcard()
+    console.log(flashcards)
+}
+
+async function markFlashcardIncorrect() {
+    const flashcard = flashcards[currentFlashcardIndex]
+    flashcard.counter = 0
+    nextFlashcard()
+    console.log(flashcards)
+}
+
+async function updateScores() {
+    const totalFlashcardCount = flashcards.length
+    var flashcard
+    let [startCount, levelOneCount, levelTwoCount, levelThreeCount, levelFourCount, levelFiveCount, levelSixCount, levelSevenCount] = [0, 0, 0, 0, 0, 0, 0, 0]
+    for (flashcard of flashcards) {
+        switch (flashcard.counter) {
+            case 0:
+                startCount += 1
+                break;
+            case 1:
+                levelOneCount += 1
+                break;
+            case 2:
+                levelTwoCount += 1
+                break;
+            case 3:
+                levelThreeCount += 1
+                break;
+            case 4:
+                levelFourCount += 1
+                break;
+            case 5:
+                levelFiveCount += 1
+                break;
+            case 6:
+                levelSixCount += 1
+                break;
+            case 7:
+                levelSevenCount += 1
+        }
+    
+    //get score elements
+    const startCountElement = document.getElementById("levelZero")
+    const levelOneCountElement = document.getElementById("levelOne")
+    const levelTwoCountElement = document.getElementById("levelTwo")
+    const levelThreeCountElement = document.getElementById("levelThree")
+    const levelFourCountElement = document.getElementById("levelFour")
+    const levelFiveCountElement = document.getElementById("levelFive")
+    const levelSixCountElement = document.getElementById("levelSix")
+    const levelSevenCountElement = document.getElementById("levelSeven")
+
+    //update scores
+    startCountElement.textContent = startCount
+    levelOneCountElement.textContent = levelOneCount
+    levelTwoCountElement.textContent = levelTwoCount
+    levelThreeCountElement.textContent = levelThreeCount
+    levelFourCountElement.textContent = levelFourCount
+    levelFiveCountElement.textContent = levelFiveCount
+    levelSixCountElement.textContent = levelSixCount
+    levelSevenCountElement.textContent = levelSevenCount
+    }
+
+    //check for win
+    if (levelSevenCount === totalFlashcardCount) {
+        const questionElement = document.getElementById("flashcardQuestion")
+        questionElement.textContent = "Congratulations! You win!"
+
+        if (questionElement.classList.contains("hidden")) {
+            flipFlashcard()
+        }
+    } 
+}
+
+
 async function runEventListeners() {
     const addDeckForm = document.getElementById("addDeckForm")
     const addFlashcardForm = document.getElementById("addFlashcardForm")
     const finishButton = document.getElementById("finishButton")
     const newGameButton = document.getElementById("newGameButton")
+    const flipCardButton = document.getElementById("flipCardButton")
+    const nextCardButton = document.getElementById("nextCardButton")
+    const markCorrectButton = document.getElementById("markCorrectButton")
+    const markIncorrectButton = document.getElementById("markIncorrectButton")
 
     if (newGameButton) {
-        newGameButton.addEventListener("click", function(event) {
+        newGameButton.addEventListener("click", async function(event) {
             event.preventDefault()
-            getFlashcards()
+            await getFlashcards()
+            showFlashcard()
+            updateScores()
+        })
+    }
+
+    if (flipCardButton) {
+        flipCardButton.addEventListener("click", async function() {
+            flipFlashcard()
+        })
+    } 
+
+    if (nextCardButton) {
+        nextCardButton.addEventListener("click", async function(event) {
+            event.preventDefault()
+            nextFlashcard()
+        })
+    }
+
+    if (markCorrectButton) {
+        markCorrectButton.addEventListener("click", async function() {
+            markFlashcardCorrect()
+        })
+    }
+
+    if (markIncorrectButton) {
+        markIncorrectButton.addEventListener("click", async function() {
+            markFlashcardIncorrect()
         })
     }
 
@@ -158,4 +339,6 @@ async function runEventListeners() {
     
 }
 
-runEventListeners()
+document.addEventListener("DOMContentLoaded", function () {
+    runEventListeners()
+})
