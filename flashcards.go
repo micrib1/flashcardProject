@@ -126,6 +126,53 @@ func getDeckByName(name string, author string) (*Deck, error) {
 	return &deck, nil
 }
 
+func getDeckByID(c *gin.Context) {
+	//DeckID sent as string via JSON - accept as string and convert to int64
+	var data struct {
+		ID string `json:"id"`
+	}
+
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON"})
+	}
+	log.Println("deckID as string: ", data.ID)
+
+	deckID, err := strconv.ParseInt(data.ID, 10, 64)
+	if err != nil {
+		log.Println("Error converting deckID to int64: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid id format"})
+		return
+	}
+
+	var returnedDeck Deck
+	rows, err := db.Query("SELECT name, author FROM decks WHERE id = ?", deckID)
+	if err != nil {
+		log.Println("Error querying database for deck name/author: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch deck name/author"})
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var deck Deck
+		if err := rows.Scan(&deck.Name, &deck.Author); err != nil {
+			log.Println("Error scanning row into deck struct: ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to parse deck data"})
+			return
+		}
+		returnedDeck = deck
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating rows: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve flashcards"})
+		return
+	}
+	c.JSON(http.StatusOK, returnedDeck)
+	log.Println(returnedDeck)
+
+}
+
 func getFlashcards(c *gin.Context) {
 	//DeckID sent as string via JSON - accept as string and convert to int64
 	var data struct {
@@ -277,6 +324,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 	router.GET("/decks", getDecks)
+	router.POST("/get-deck-by-id", getDeckByID)
 	router.POST("/decks", createDeck)
 	router.POST("/get-flashcards", getFlashcards)
 	router.POST("/flashcards", createFlashcard)

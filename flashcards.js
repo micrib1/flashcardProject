@@ -33,7 +33,26 @@ async function getDecks() {
     }
 }
 
+async function getDeckByID(deckID) {
+    const deckNameElement = document.getElementById("deckName")
 
+    await fetch("http://localhost:8080/get-deck-by-id", {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json",
+        },
+        body: JSON.stringify({ id: deckID }),
+    }).then((result) => {
+        if (!result.ok) {
+            throw new Error("Failed to fetch deck")
+        }
+        return result.json()
+    }).then((fetchedDeck) => {
+        deckNameElement.textContent = fetchedDeck.name + " - " + fetchedDeck.author
+    }).catch((error) => {
+        console.error("Error fetching deck attributes: ", error)
+    })
+}
 
 async function createDeck(name, author) {
     const data = {
@@ -91,7 +110,7 @@ async function getFlashcards() {
         return
     }
     const deckID = deckSelection.value
-    console.log(deckID)
+    getDeckByID(deckID)
 
     await fetch("http://localhost:8080/get-flashcards", {
         method: "POST",
@@ -101,7 +120,6 @@ async function getFlashcards() {
         body: JSON.stringify({ deck_id: deckID }),
     })
     .then((result) => {
-        console.log(JSON.stringify({ deck_id: deckID}))
         if (!result.ok) {
             throw new Error("Failed to fetch flashcards")
         }
