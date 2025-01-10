@@ -34,6 +34,7 @@ async function getDecks() {
 }
 
 
+
 async function createDeck(name, author) {
     const data = {
         name, author,
@@ -118,14 +119,15 @@ async function getFlashcards() {
 
 async function shuffleFlashcards(array) {
     try {
-        console.log("starting shuffle")
-        console.log("initial flashcards array: ", JSON.stringify(array))
+        console.debug("initial flashcards array: ", JSON.stringify(array))
         for (let i = array.length -1; i > 0; i--) {
-            console.log("i: ", i)
             const j = Math.floor(Math.random() * (i + 1))
-            console.log("j: ", j)
+
+            if (typeof array[j] === "undefined" || typeof array[i] === "undefined") {
+                console.debug(`Invalid array element at index i: ${i} or j: ${j}`)
+            }
+
             [array[i], array[j]] = [array[j], array[i]]
-            console.log("shuffling complete: ", array)
         }
         return array
     } catch(error) {
@@ -170,18 +172,38 @@ async function nextFlashcard() {
         alert("No flashcards available")
         return
     }
-    
-    const lastFlashcardIndex = flashcards.length - 1
-    if (currentFlashcardIndex != lastFlashcardIndex) {
-        currentFlashcardIndex += 1
-        showFlashcard()
-    } else {
-        //flashcards = await shuffleFlashcards(flashcards)
-        currentFlashcardIndex = 0
-        showFlashcard()
-    }
 
     await updateScores()
+    //check for win before proceeding to next flashcard
+    if (flashcards.every(flashcard => flashcard.counter === 7)) {
+        const questionElement = document.getElementById("flashcardQuestion")
+        questionElement.textContent = "Congratulations!  You Win!"
+
+        if (questionElement.classList.contains("hidden")) {
+            flipFlashcard()
+        }
+        return
+    }
+    
+    const lastFlashcardIndex = flashcards.length - 1
+    console.debug(lastFlashcardIndex)
+    if (currentFlashcardIndex !== lastFlashcardIndex) {
+        currentFlashcardIndex += 1
+        if (flashcards[currentFlashcardIndex].counter !== 7) {
+            showFlashcard()
+        } else {
+            nextFlashcard()
+        }
+    } else {
+        flashcards = await shuffleFlashcards(flashcards)
+        currentFlashcardIndex = 0
+        if (flashcards[currentFlashcardIndex].counter !== 7) {
+            showFlashcard()
+        } else {
+            flashcards.rem
+            nextFlashcard()
+        }
+    }
 }
 
 async function markFlashcardCorrect() {
@@ -199,7 +221,6 @@ async function markFlashcardIncorrect() {
 }
 
 async function updateScores() {
-    const totalFlashcardCount = flashcards.length
     var flashcard
     let [startCount, levelOneCount, levelTwoCount, levelThreeCount, levelFourCount, levelFiveCount, levelSixCount, levelSevenCount] = [0, 0, 0, 0, 0, 0, 0, 0]
     for (flashcard of flashcards) {
@@ -249,16 +270,6 @@ async function updateScores() {
     levelSixCountElement.textContent = levelSixCount
     levelSevenCountElement.textContent = levelSevenCount
     }
-
-    //check for win
-    if (levelSevenCount === totalFlashcardCount) {
-        const questionElement = document.getElementById("flashcardQuestion")
-        questionElement.textContent = "Congratulations! You win!"
-
-        if (questionElement.classList.contains("hidden")) {
-            flipFlashcard()
-        }
-    } 
 }
 
 
@@ -268,14 +279,15 @@ async function runEventListeners() {
     const finishButton = document.getElementById("finishButton")
     const newGameButton = document.getElementById("newGameButton")
     const flipCardButton = document.getElementById("flipCardButton")
-    const nextCardButton = document.getElementById("nextCardButton")
     const markCorrectButton = document.getElementById("markCorrectButton")
     const markIncorrectButton = document.getElementById("markIncorrectButton")
+    //const deckName = document.getElementById("deckName")
 
     if (newGameButton) {
         newGameButton.addEventListener("click", async function(event) {
             event.preventDefault()
             await getFlashcards()
+            const totalFlashcardCount = flashcards.length
             showFlashcard()
             updateScores()
         })
@@ -286,13 +298,6 @@ async function runEventListeners() {
             flipFlashcard()
         })
     } 
-
-    if (nextCardButton) {
-        nextCardButton.addEventListener("click", async function(event) {
-            event.preventDefault()
-            nextFlashcard()
-        })
-    }
 
     if (markCorrectButton) {
         markCorrectButton.addEventListener("click", async function() {

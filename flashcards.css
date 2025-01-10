@@ -78,6 +78,7 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color:beige;
 }
 
 .buttons {
@@ -94,7 +95,6 @@ header {
 
 #buttonsContainer {
     width: 600px;
-    background-color: beige;
     display: flex;
     justify-content: space-around;
 }
